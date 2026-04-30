@@ -187,6 +187,13 @@ impl<A: GlobalAlloc> Heapster<A> {
 
     /// Sets the stats to 0, except for current heap use (which is unaffected)
     /// and maximum heap use, which is reset to the value of current heap use.
+    ///
+    /// **Concurrency note:** `reset` is not synchronized with allocator activity.
+    /// If another thread is mid-allocation when `reset` runs, its increment may
+    /// land on a freshly-zeroed counter, briefly producing skewed values (or, in
+    /// rare cases, a transient apparent decrease in `use_curr`). For measuring a
+    /// specific operation in a multi-threaded program, prefer [`Heapster::measure`],
+    /// which uses snapshot diffing and avoids touching shared state.
     pub fn reset(&self) {
         ALLOC_SUM.store(0, Ordering::Relaxed);
         ALLOC_COUNT.store(0, Ordering::Relaxed);

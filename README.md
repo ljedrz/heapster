@@ -86,7 +86,7 @@ realloc_move_avg: 7.21 KiB
 use_curr: 260.39 KiB
 use_max: 25.01 MiB
 
-alloc_buckets:
+alloc_histogram:
 [      4 B ..       8 B):            2  █
 [      8 B ..      16 B):      642,064  ███████████
 [     16 B ..      32 B):          155  █
@@ -103,7 +103,7 @@ alloc_buckets:
 [   32 KiB ..    64 KiB):            1  █
 [   64 KiB ..   128 KiB):      320,982  █████
 
-realloc_growth_buckets:
+realloc_growth_histogram:
 [      1 B ..       2 B):           16  █
 [      2 B ..       4 B):            0  
 [      4 B ..       8 B):            0  
@@ -121,5 +121,5 @@ realloc_growth_buckets:
 [   16 KiB ..    32 KiB):            0  
 [   32 KiB ..    64 KiB):      320,982  ████████████████████████████████████████
 
-realloc_shrink_buckets: (empty)
+realloc_shrink_histogram: (empty)
 ```
