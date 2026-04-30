@@ -3,7 +3,8 @@ use std::{alloc::GlobalAlloc, ops::Sub};
 use crate::{Heapster, Histogram};
 
 /// A summary of an allocator's stats.
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct Stats {
     /// The total number of allocations.
     pub alloc_count: usize,

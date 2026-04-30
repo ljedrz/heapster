@@ -1,4 +1,12 @@
+#[cfg(feature = "serde")]
+use std::fmt;
 use std::ops::Sub;
+
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize, Deserializer, Serialize, Serializer,
+    de::{SeqAccess, Visitor},
+};
 
 /// A histogram with power-of-two buckets containing the numbers of
 /// entries of different sizes, starting with 2^0 and ending with 2^63.
@@ -78,5 +86,41 @@ impl Histogram {
         }
         // Unreachable given total > 0, but be safe.
         None
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Histogram {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        self.buckets.as_slice().serialize(s)
+    }
+}
+
+#[cfg(feature = "serde")]
+struct BucketVisitor;
+
+#[cfg(feature = "serde")]
+impl<'de> Visitor<'de> for BucketVisitor {
+    type Value = Histogram;
+
+    fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("an array of 64 usize values")
+    }
+
+    fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> Result<Self::Value, A::Error> {
+        let mut out = [0usize; 64];
+        for (i, slot) in out.iter_mut().enumerate() {
+            *slot = seq
+                .next_element()?
+                .ok_or_else(|| serde::de::Error::invalid_length(i, &self))?;
+        }
+        Ok(Histogram { buckets: out })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Histogram {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        d.deserialize_tuple(64, BucketVisitor)
     }
 }
