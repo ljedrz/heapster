@@ -12,6 +12,7 @@ impl fmt::Display for Stats {
             "alloc_count: {}",
             self.alloc_count.to_formatted_string(&Locale::en)
         )?;
+        writeln!(f, "alloc_sum: {}", format_size(self.alloc_sum, BINARY))?;
         if let Some(alloc_avg) = self.alloc_avg {
             writeln!(f, "alloc_avg: {}", format_size(alloc_avg, BINARY))?;
         }
@@ -20,6 +21,7 @@ impl fmt::Display for Stats {
             "\ndealloc_count: {}",
             self.dealloc_count.to_formatted_string(&Locale::en)
         )?;
+        writeln!(f, "dealloc_sum: {}", format_size(self.dealloc_sum, BINARY))?;
         if let Some(dealloc_avg) = self.dealloc_avg {
             writeln!(f, "dealloc_avg: {}", format_size(dealloc_avg, BINARY))?;
         }
@@ -27,6 +29,11 @@ impl fmt::Display for Stats {
             f,
             "\nrealloc_growth_count: {}",
             self.realloc_growth_count.to_formatted_string(&Locale::en)
+        )?;
+        writeln!(
+            f,
+            "realloc_growth_sum: {}",
+            format_size(self.realloc_growth_sum, BINARY)
         )?;
         if let Some(realloc_growth_avg) = self.realloc_growth_avg {
             writeln!(
@@ -40,6 +47,11 @@ impl fmt::Display for Stats {
             "\nrealloc_shrink_count: {}",
             self.realloc_shrink_count.to_formatted_string(&Locale::en)
         )?;
+        writeln!(
+            f,
+            "realloc_shrink_sum: {}",
+            format_size(self.realloc_shrink_sum, BINARY)
+        )?;
         if let Some(realloc_shrink_avg) = self.realloc_shrink_avg {
             writeln!(
                 f,
@@ -51,6 +63,11 @@ impl fmt::Display for Stats {
             f,
             "\nrealloc_move_count: {}",
             self.realloc_move_count.to_formatted_string(&Locale::en)
+        )?;
+        writeln!(
+            f,
+            "realloc_move_sum: {}",
+            format_size(self.realloc_move_sum, BINARY)
         )?;
         if let Some(realloc_move_avg) = self.realloc_move_avg {
             writeln!(

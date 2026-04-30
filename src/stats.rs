@@ -7,28 +7,38 @@ use crate::Heapster;
 pub struct Stats {
     /// The total number of allocations.
     pub alloc_count: usize,
+    /// The sum of all allocations.
+    pub alloc_sum: usize,
     /// The average size of allocations.
     pub alloc_avg: Option<usize>,
     /// The allocation size buckets.
     pub alloc_buckets: [usize; 64],
     /// The total number of deallocations.
     pub dealloc_count: usize,
+    /// The sum of all deallocations.
+    pub dealloc_sum: usize,
     /// The average size of deallocations.
     pub dealloc_avg: Option<usize>,
     /// The total number of reallocations caused by object growth.
     pub realloc_growth_count: usize,
+    /// The sum of all growth reallocations.
+    pub realloc_growth_sum: usize,
     /// The average size of reallocations caused by object growth.
     pub realloc_growth_avg: Option<usize>,
     /// The growth reallocation size buckets.
     pub realloc_growth_buckets: [usize; 64],
     /// The total number of reallocations caused by object shrinkage.
     pub realloc_shrink_count: usize,
+    /// The sum of all shrink reallocations.
+    pub realloc_shrink_sum: usize,
     /// The average size of reallocations caused by object shrinkage.
     pub realloc_shrink_avg: Option<usize>,
     /// The shrink reallocation size buckets.
     pub realloc_shrink_buckets: [usize; 64],
     /// The total number of full reallocations.
     pub realloc_move_count: usize,
+    /// The sum of all full allocations.
+    pub realloc_move_sum: usize,
     /// The average size of full reallocations.
     pub realloc_move_avg: Option<usize>,
     /// Current heap use.
@@ -68,17 +78,22 @@ impl<A: GlobalAlloc> Heapster<A> {
 
         Stats {
             alloc_count,
+            alloc_sum,
             alloc_avg,
             alloc_buckets,
             dealloc_count,
+            dealloc_sum,
             dealloc_avg,
             realloc_growth_count,
+            realloc_growth_sum,
             realloc_growth_avg,
             realloc_growth_buckets,
             realloc_shrink_count,
+            realloc_shrink_sum,
             realloc_shrink_avg,
             realloc_shrink_buckets,
             realloc_move_count,
+            realloc_move_sum,
             realloc_move_avg,
             use_curr,
             use_max,
