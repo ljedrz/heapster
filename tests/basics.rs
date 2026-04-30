@@ -184,3 +184,27 @@ fn basics() {
     assert_eq!(GLOBAL.realloc_move_sum(), 0);
     assert_eq!(GLOBAL.realloc_move_avg(), None);
 }
+
+#[test]
+fn measure() {
+    // Start with a blank slate.
+    GLOBAL.reset();
+
+    let (_, stats) = GLOBAL.measure(|| {});
+    assert_eq!(stats.alloc_count, 0);
+    assert_eq!(stats.alloc_sum, 0);
+
+    let _ = Vec::<u8>::with_capacity(2);
+
+    let stats = GLOBAL.stats();
+    assert_eq!(stats.alloc_count, 1);
+    assert_eq!(stats.alloc_sum, 2);
+
+    let (_, stats) = GLOBAL.measure(|| Vec::<u8>::with_capacity(8));
+    assert_eq!(stats.alloc_count, 1);
+    assert_eq!(stats.alloc_sum, 8);
+
+    let stats = GLOBAL.stats();
+    assert_eq!(stats.alloc_count, 2);
+    assert_eq!(stats.alloc_sum, 10);
+}

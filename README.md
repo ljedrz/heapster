@@ -18,7 +18,7 @@ Heavyweight heap profilers are great for deep-dives, but they are often too slow
 - **Plug-and-Play Generic**: Wrap `System`, `jemalloc`, `mimalloc`, or any custom allocator.
 - **Pathology Hunting**: Logarithmic size bucketing (histograms) tells you exactly what sizes are dominating your heap.
 - **Deep Realloc Tracking**: Distinguishes between reallocations that grew in-place, shrank in-place, or forced a full memory move (copying).
-- **Benchmarking & Diffing**: Exposes a `.reset()` method so you can take clean snapshots of memory behavior around hot loops.
+- **Benchmarking & Diffing**: Exposes a `measure` method so you can take clean snapshots of memory behavior around hot loops.
 
 ### Quickstart
 
@@ -49,16 +49,11 @@ fn main() {
 ### Use Cases
 **1. Zero-Friction Benchmarking & Diffing**
 
-Stop guessing if a PR increased allocations. `heapster` lets you reset the counters immediately before a critical section of code, allowing you to perfectly measure the heap delta.
+Stop guessing if a PR increased allocations. `heapster` lets you measure the heap stats of critical sections of code.
 
 ```Rust
-GLOBAL.reset();
-
-// ... run your algorithm ...
-my_hot_loop();
-
-let diff = GLOBAL.stats();
-assert!(diff.alloc_count < 10, "Regression: Hot loop allocated too much!");
+let (result, heap_diff) = GLOBAL.measure(|| operation_to_measure());
+assert!(heap_diff.alloc_count < 10, "Regression: The operation allocated too many times!");
 ```
 
 **2. Catching Reallocation Thrashing**

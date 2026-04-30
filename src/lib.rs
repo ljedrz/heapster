@@ -161,6 +161,15 @@ impl<A: GlobalAlloc> Heapster<A> {
         USE_MAX.load(Ordering::Relaxed)
     }
 
+    /// Measures the heap stats for the given operation, returning its
+    /// result alongside the [`Stats`] object.
+    pub fn measure<R>(&self, f: impl FnOnce() -> R) -> (R, Stats) {
+        let before = self.stats();
+        let r = f();
+        let after = self.stats();
+        (r, &after - &before)
+    }
+
     /// Sets the stats to 0, except for current heap use (which is unaffected)
     /// and maximum heap use, which is reset to the value of current heap use.
     pub fn reset(&self) {
