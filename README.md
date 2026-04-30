@@ -36,7 +36,7 @@ use heapster::Heapster;
 use std::alloc::System;
 
 #[global_allocator]
-static GLOBAL: Heapster<System> = Heapster(System);
+static GLOBAL: Heapster<System> = Heapster::new(System);
 
 fn main() {
     // ... do some heavy work ...
