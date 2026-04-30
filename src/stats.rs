@@ -13,6 +13,8 @@ pub struct Stats {
     pub alloc_avg: Option<usize>,
     /// The allocation size buckets.
     pub alloc_buckets: [usize; 64],
+    /// The total number of failed allocations.
+    pub alloc_fail_count: usize,
     /// The total number of deallocations.
     pub dealloc_count: usize,
     /// The sum of all deallocations.
@@ -41,6 +43,8 @@ pub struct Stats {
     pub realloc_move_sum: usize,
     /// The average size of full reallocations.
     pub realloc_move_avg: Option<usize>,
+    /// The total number of failed reallocations.
+    pub realloc_fail_count: usize,
     /// Current heap use.
     pub use_curr: usize,
     /// Maximum recorded heap use.
@@ -54,6 +58,7 @@ impl<A: GlobalAlloc> Heapster<A> {
         let alloc_sum = self.alloc_sum();
         let alloc_avg = alloc_sum.checked_div(alloc_count);
         let alloc_buckets = self.alloc_buckets();
+        let alloc_fail_count = self.alloc_fail_count();
 
         let dealloc_count = self.dealloc_count();
         let dealloc_sum = self.dealloc_sum();
@@ -72,6 +77,7 @@ impl<A: GlobalAlloc> Heapster<A> {
         let realloc_move_count = self.realloc_move_count();
         let realloc_move_sum = self.realloc_move_sum();
         let realloc_move_avg = realloc_move_sum.checked_div(realloc_move_count);
+        let realloc_fail_count = self.realloc_fail_count();
 
         let use_curr = self.use_curr();
         let use_max = self.use_max();
@@ -81,6 +87,7 @@ impl<A: GlobalAlloc> Heapster<A> {
             alloc_sum,
             alloc_avg,
             alloc_buckets,
+            alloc_fail_count,
             dealloc_count,
             dealloc_sum,
             dealloc_avg,
@@ -95,6 +102,7 @@ impl<A: GlobalAlloc> Heapster<A> {
             realloc_move_count,
             realloc_move_sum,
             realloc_move_avg,
+            realloc_fail_count,
             use_curr,
             use_max,
         }
@@ -117,6 +125,7 @@ impl Sub<&Stats> for &Stats {
         let alloc_sum = self.alloc_sum - old.alloc_sum;
         let alloc_avg = alloc_sum.checked_div(alloc_count);
         let alloc_buckets = diff_buckets(self.alloc_buckets, old.alloc_buckets);
+        let alloc_fail_count = self.alloc_fail_count - old.alloc_fail_count;
 
         let dealloc_count = self.dealloc_count - old.dealloc_count;
         let dealloc_sum = self.dealloc_sum - old.dealloc_sum;
@@ -137,12 +146,14 @@ impl Sub<&Stats> for &Stats {
         let realloc_move_count = self.realloc_move_count - old.realloc_move_count;
         let realloc_move_sum = self.realloc_move_sum - old.realloc_move_sum;
         let realloc_move_avg = realloc_move_sum.checked_div(realloc_move_count);
+        let realloc_fail_count = self.realloc_fail_count - old.realloc_fail_count;
 
         Stats {
             alloc_count,
             alloc_sum,
             alloc_avg,
             alloc_buckets,
+            alloc_fail_count,
             dealloc_count,
             dealloc_sum,
             dealloc_avg,
@@ -157,6 +168,7 @@ impl Sub<&Stats> for &Stats {
             realloc_move_count,
             realloc_move_sum,
             realloc_move_avg,
+            realloc_fail_count,
             use_curr: self.use_curr,
             use_max: self.use_max,
         }

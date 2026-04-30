@@ -12,6 +12,7 @@ use std::{
 static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
 static ALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
 static ALLOC_BUCKETS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
+static ALLOC_FAIL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 static DEALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
 static DEALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
@@ -26,6 +27,7 @@ static REALLOC_SHRINK_BUCKETS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) 
 
 static REALLOC_MOVE_COUNT: AtomicUsize = AtomicUsize::new(0);
 static REALLOC_MOVE_SUM: AtomicUsize = AtomicUsize::new(0);
+static REALLOC_FAIL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 static USE_CURR: AtomicUsize = AtomicUsize::new(0);
 static USE_MAX: AtomicUsize = AtomicUsize::new(0);
@@ -62,6 +64,11 @@ impl<A: GlobalAlloc> Heapster<A> {
     /// different sizes, starting with 2^0 and ending with 2^63.
     pub fn alloc_buckets(&self) -> [usize; 64] {
         bucket_snapshot(&ALLOC_BUCKETS)
+    }
+
+    /// Returns the total number of failed allocations.
+    pub fn alloc_fail_count(&self) -> usize {
+        ALLOC_FAIL_COUNT.load(Ordering::Relaxed)
     }
 
     /// Returns the total number of deallocations.
@@ -114,6 +121,11 @@ impl<A: GlobalAlloc> Heapster<A> {
     /// Returns the sum of all full reallocations.
     pub fn realloc_move_sum(&self) -> usize {
         REALLOC_MOVE_SUM.load(Ordering::Relaxed)
+    }
+
+    /// Returns the total number of failed reallocations.
+    pub fn realloc_fail_count(&self) -> usize {
+        REALLOC_FAIL_COUNT.load(Ordering::Relaxed)
     }
 
     /// Returns the average size of allocations.
@@ -178,6 +190,7 @@ impl<A: GlobalAlloc> Heapster<A> {
         for b in &ALLOC_BUCKETS {
             b.store(0, Ordering::Relaxed);
         }
+        ALLOC_FAIL_COUNT.store(0, Ordering::Relaxed);
 
         DEALLOC_SUM.store(0, Ordering::Relaxed);
         DEALLOC_COUNT.store(0, Ordering::Relaxed);
@@ -196,6 +209,7 @@ impl<A: GlobalAlloc> Heapster<A> {
 
         REALLOC_MOVE_COUNT.store(0, Ordering::Relaxed);
         REALLOC_MOVE_SUM.store(0, Ordering::Relaxed);
+        REALLOC_FAIL_COUNT.store(0, Ordering::Relaxed);
 
         USE_MAX.store(self.use_curr(), Ordering::Relaxed);
     }
@@ -217,7 +231,10 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
             let curr = USE_CURR.fetch_add(size, Ordering::Relaxed) + size;
             USE_MAX.fetch_max(curr, Ordering::Relaxed);
             ALLOC_BUCKETS[bucket_of(size)].fetch_add(1, Ordering::Relaxed);
+        } else {
+            ALLOC_FAIL_COUNT.fetch_add(1, Ordering::Relaxed);
         }
+
         ret
     }
 
@@ -250,7 +267,10 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
                 REALLOC_MOVE_COUNT.fetch_add(1, Ordering::Relaxed);
                 REALLOC_MOVE_SUM.fetch_add(cmp::min(layout.size(), new_size), Ordering::Relaxed);
             }
+        } else {
+            REALLOC_FAIL_COUNT.fetch_add(1, Ordering::Relaxed);
         }
+
         new_ptr
     }
 }
