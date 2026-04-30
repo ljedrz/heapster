@@ -29,7 +29,7 @@ impl Sub<&Histogram> for &Histogram {
     fn sub(self, old: &Histogram) -> Histogram {
         let mut out = [0usize; 64];
         for (i, (b_base, b_old)) in self.buckets.iter().zip(&old.buckets).enumerate() {
-            out[i] = b_base - b_old;
+            out[i] = b_base.saturating_sub(*b_old);
         }
         Histogram { buckets: out }
     }

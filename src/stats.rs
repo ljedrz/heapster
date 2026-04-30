@@ -13,7 +13,7 @@ pub struct Stats {
     /// The average size of allocations.
     pub alloc_avg: Option<usize>,
     /// The allocation size buckets.
-    pub alloc_buckets: Histogram,
+    pub alloc_histogram: Histogram,
     /// The total number of failed allocations.
     pub alloc_fail_count: usize,
     /// The total number of deallocations.
@@ -29,7 +29,7 @@ pub struct Stats {
     /// The average size of reallocations caused by object growth.
     pub realloc_growth_avg: Option<usize>,
     /// The growth reallocation size buckets.
-    pub realloc_growth_buckets: Histogram,
+    pub realloc_growth_histogram: Histogram,
     /// The total number of reallocations caused by object shrinkage.
     pub realloc_shrink_count: usize,
     /// The sum of all shrink reallocations.
@@ -37,10 +37,10 @@ pub struct Stats {
     /// The average size of reallocations caused by object shrinkage.
     pub realloc_shrink_avg: Option<usize>,
     /// The shrink reallocation size buckets.
-    pub realloc_shrink_buckets: Histogram,
+    pub realloc_shrink_histogram: Histogram,
     /// The total number of full reallocations.
     pub realloc_move_count: usize,
-    /// The sum of all full allocations.
+    /// The sum of all full reallocations.
     pub realloc_move_sum: usize,
     /// The average size of full reallocations.
     pub realloc_move_avg: Option<usize>,
@@ -58,7 +58,7 @@ impl<A: GlobalAlloc> Heapster<A> {
         let alloc_count = self.alloc_count();
         let alloc_sum = self.alloc_sum();
         let alloc_avg = alloc_sum.checked_div(alloc_count);
-        let alloc_buckets = self.alloc_histogram();
+        let alloc_histogram = self.alloc_histogram();
         let alloc_fail_count = self.alloc_fail_count();
 
         let dealloc_count = self.dealloc_count();
@@ -68,12 +68,12 @@ impl<A: GlobalAlloc> Heapster<A> {
         let realloc_growth_count = self.realloc_growth_count();
         let realloc_growth_sum = self.realloc_growth_sum();
         let realloc_growth_avg = realloc_growth_sum.checked_div(realloc_growth_count);
-        let realloc_growth_buckets = self.realloc_growth_histogram();
+        let realloc_growth_histogram = self.realloc_growth_histogram();
 
         let realloc_shrink_count = self.realloc_shrink_count();
         let realloc_shrink_sum = self.realloc_shrink_sum();
         let realloc_shrink_avg = realloc_shrink_sum.checked_div(realloc_shrink_count);
-        let realloc_shrink_buckets = self.realloc_shrink_histogram();
+        let realloc_shrink_histogram = self.realloc_shrink_histogram();
 
         let realloc_move_count = self.realloc_move_count();
         let realloc_move_sum = self.realloc_move_sum();
@@ -87,7 +87,7 @@ impl<A: GlobalAlloc> Heapster<A> {
             alloc_count,
             alloc_sum,
             alloc_avg,
-            alloc_buckets,
+            alloc_histogram,
             alloc_fail_count,
             dealloc_count,
             dealloc_sum,
@@ -95,11 +95,11 @@ impl<A: GlobalAlloc> Heapster<A> {
             realloc_growth_count,
             realloc_growth_sum,
             realloc_growth_avg,
-            realloc_growth_buckets,
+            realloc_growth_histogram,
             realloc_shrink_count,
             realloc_shrink_sum,
             realloc_shrink_avg,
-            realloc_shrink_buckets,
+            realloc_shrink_histogram,
             realloc_move_count,
             realloc_move_sum,
             realloc_move_avg,
@@ -114,36 +114,48 @@ impl Sub<&Stats> for &Stats {
     type Output = Stats;
 
     fn sub(self, old: &Stats) -> Stats {
-        let alloc_count = self.alloc_count - old.alloc_count;
-        let alloc_sum = self.alloc_sum - old.alloc_sum;
+        let alloc_count = self.alloc_count.saturating_sub(old.alloc_count);
+        let alloc_sum = self.alloc_sum.saturating_sub(old.alloc_sum);
         let alloc_avg = alloc_sum.checked_div(alloc_count);
-        let alloc_buckets = &self.alloc_buckets - &old.alloc_buckets;
-        let alloc_fail_count = self.alloc_fail_count - old.alloc_fail_count;
+        let alloc_histogram = self.alloc_histogram - old.alloc_histogram;
+        let alloc_fail_count = self.alloc_fail_count.saturating_sub(old.alloc_fail_count);
 
-        let dealloc_count = self.dealloc_count - old.dealloc_count;
-        let dealloc_sum = self.dealloc_sum - old.dealloc_sum;
+        let dealloc_count = self.dealloc_count.saturating_sub(old.dealloc_count);
+        let dealloc_sum = self.dealloc_sum.saturating_sub(old.dealloc_sum);
         let dealloc_avg = dealloc_sum.checked_div(dealloc_count);
 
-        let realloc_growth_count = self.realloc_growth_count - old.realloc_growth_count;
-        let realloc_growth_sum = self.realloc_growth_sum - old.realloc_growth_sum;
+        let realloc_growth_count = self
+            .realloc_growth_count
+            .saturating_sub(old.realloc_growth_count);
+        let realloc_growth_sum = self
+            .realloc_growth_sum
+            .saturating_sub(old.realloc_growth_sum);
         let realloc_growth_avg = realloc_growth_sum.checked_div(realloc_growth_count);
-        let realloc_growth_buckets = &self.realloc_growth_buckets - &old.realloc_growth_buckets;
+        let realloc_growth_histogram = self.realloc_growth_histogram - old.realloc_growth_histogram;
 
-        let realloc_shrink_count = self.realloc_shrink_count - old.realloc_shrink_count;
-        let realloc_shrink_sum = self.realloc_shrink_sum - old.realloc_shrink_sum;
+        let realloc_shrink_count = self
+            .realloc_shrink_count
+            .saturating_sub(old.realloc_shrink_count);
+        let realloc_shrink_sum = self
+            .realloc_shrink_sum
+            .saturating_sub(old.realloc_shrink_sum);
         let realloc_shrink_avg = realloc_shrink_sum.checked_div(realloc_shrink_count);
-        let realloc_shrink_buckets = &self.realloc_shrink_buckets - &old.realloc_shrink_buckets;
+        let realloc_shrink_histogram = self.realloc_shrink_histogram - old.realloc_shrink_histogram;
 
-        let realloc_move_count = self.realloc_move_count - old.realloc_move_count;
-        let realloc_move_sum = self.realloc_move_sum - old.realloc_move_sum;
+        let realloc_move_count = self
+            .realloc_move_count
+            .saturating_sub(old.realloc_move_count);
+        let realloc_move_sum = self.realloc_move_sum.saturating_sub(old.realloc_move_sum);
         let realloc_move_avg = realloc_move_sum.checked_div(realloc_move_count);
-        let realloc_fail_count = self.realloc_fail_count - old.realloc_fail_count;
+        let realloc_fail_count = self
+            .realloc_fail_count
+            .saturating_sub(old.realloc_fail_count);
 
         Stats {
             alloc_count,
             alloc_sum,
             alloc_avg,
-            alloc_buckets,
+            alloc_histogram,
             alloc_fail_count,
             dealloc_count,
             dealloc_sum,
@@ -151,11 +163,11 @@ impl Sub<&Stats> for &Stats {
             realloc_growth_count,
             realloc_growth_sum,
             realloc_growth_avg,
-            realloc_growth_buckets,
+            realloc_growth_histogram,
             realloc_shrink_count,
             realloc_shrink_sum,
             realloc_shrink_avg,
-            realloc_shrink_buckets,
+            realloc_shrink_histogram,
             realloc_move_count,
             realloc_move_sum,
             realloc_move_avg,

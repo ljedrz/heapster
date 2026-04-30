@@ -79,16 +79,16 @@ impl fmt::Display for Stats {
         writeln!(f, "\nuse_curr: {}", format_size(self.use_curr, BINARY))?;
         writeln!(f, "use_max: {}", format_size(self.use_max, BINARY))?;
 
-        writeln!(f, "\nalloc_buckets:\n{}", &self.alloc_buckets)?;
+        writeln!(f, "\nalloc_histogram:\n{}", &self.alloc_histogram)?;
         writeln!(
             f,
-            "realloc_growth_buckets:\n{}",
-            &self.realloc_growth_buckets
+            "realloc_growth_histogram:\n{}",
+            &self.realloc_growth_histogram
         )?;
         writeln!(
             f,
-            "realloc_shrink_buckets:\n{}",
-            &self.realloc_shrink_buckets
+            "realloc_shrink_histogram:\n{}",
+            &self.realloc_shrink_histogram
         )?;
 
         Ok(())
