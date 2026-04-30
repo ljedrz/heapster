@@ -165,3 +165,27 @@ impl Sub<&Stats> for &Stats {
         }
     }
 }
+
+impl Sub<Stats> for Stats {
+    type Output = Stats;
+
+    fn sub(self, old: Stats) -> Stats {
+        &self - &old
+    }
+}
+
+impl Sub<&Stats> for Stats {
+    type Output = Stats;
+
+    fn sub(self, old: &Stats) -> Stats {
+        &self - old
+    }
+}
+
+impl Sub<Stats> for &Stats {
+    type Output = Stats;
+
+    fn sub(self, old: Stats) -> Stats {
+        self - &old
+    }
+}

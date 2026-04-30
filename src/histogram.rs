@@ -35,6 +35,30 @@ impl Sub<&Histogram> for &Histogram {
     }
 }
 
+impl Sub<Histogram> for Histogram {
+    type Output = Histogram;
+
+    fn sub(self, old: Histogram) -> Histogram {
+        &self - &old
+    }
+}
+
+impl Sub<&Histogram> for Histogram {
+    type Output = Histogram;
+
+    fn sub(self, old: &Histogram) -> Histogram {
+        &self - old
+    }
+}
+
+impl Sub<Histogram> for &Histogram {
+    type Output = Histogram;
+
+    fn sub(self, old: Histogram) -> Histogram {
+        self - &old
+    }
+}
+
 impl Histogram {
     /// Returns the raw underlying buckets.
     pub fn buckets(&self) -> [usize; 64] {
