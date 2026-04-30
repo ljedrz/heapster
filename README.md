@@ -26,7 +26,7 @@ Add `heapster` to your `Cargo.toml`. Enable the `fmt` feature if you want pretty
 
 ```TOML
 [dependencies]
-heapster = { version = "0.1", features = ["fmt"] }
+heapster = { version = "0.2", features = ["fmt"] }
 ```
 
 Wrap your global allocator of choice (e.g., `System`) in your `main.rs` or `lib.rs`:
