@@ -13,6 +13,9 @@ categories  = ["memory-management"]
 keywords = ["allocator", "heap", "memory"]
 rust-version = "1.85"
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 fmt = ["dep:humansize", "dep:num-format"]
 serde = ["dep:serde"]

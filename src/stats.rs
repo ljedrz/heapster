@@ -46,9 +46,13 @@ pub struct Stats {
     pub realloc_move_avg: Option<usize>,
     /// The total number of failed reallocations.
     pub realloc_fail_count: usize,
-    /// Current heap use.
+    /// Current heap use; it always shows the current use, even
+    /// after calling [`Heapster::reset`] or in the output of
+    /// [`Heapster::measure`].
     pub use_curr: usize,
-    /// Maximum recorded heap use.
+    /// Maximum recorded heap use; when using [`Heapster::measure`], it
+    /// indicates how much maximum memory use grew during the measured
+    /// operation.
     pub use_max: usize,
 }
 
@@ -151,6 +155,8 @@ impl Sub<&Stats> for &Stats {
             .realloc_fail_count
             .saturating_sub(old.realloc_fail_count);
 
+        let use_max = self.use_max.saturating_sub(old.use_max);
+
         Stats {
             alloc_count,
             alloc_sum,
@@ -173,7 +179,7 @@ impl Sub<&Stats> for &Stats {
             realloc_move_avg,
             realloc_fail_count,
             use_curr: self.use_curr,
-            use_max: self.use_max,
+            use_max,
         }
     }
 }

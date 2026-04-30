@@ -9,7 +9,8 @@ use serde::{
 };
 
 /// A histogram with power-of-two buckets containing the numbers of
-/// entries of different sizes, starting with 2^0 and ending with 2^63.
+/// entries of different sizes, starting with 2^0 and ending with the
+/// [2^63, 2^64) bucket.
 #[derive(Debug, Clone, Copy)]
 pub struct Histogram {
     pub(crate) buckets: [usize; 64],
