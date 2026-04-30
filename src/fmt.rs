@@ -99,14 +99,14 @@ impl fmt::Display for Histogram {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         const BAR_WIDTH: usize = 40;
 
-        let Some(first) = self.buckets.iter().position(|&c| c > 0) else {
+        let Some(first) = self.buckets().iter().position(|&c| c > 0) else {
             writeln!(f, "(empty)")?;
             return Ok(());
         };
-        let last = self.buckets.iter().rposition(|&c| c > 0).unwrap();
-        let max = *self.buckets[first..=last].iter().max().unwrap();
+        let last = self.buckets().iter().rposition(|&c| c > 0).unwrap();
+        let max = *self.buckets()[first..=last].iter().max().unwrap();
 
-        for (k, &count) in (first..=last).zip(self.buckets[first..=last].iter()) {
+        for (k, &count) in (first..=last).zip(self.buckets()[first..=last].iter()) {
             let lo = 1usize << k;
             // bucket k covers [2^k, 2^(k+1) - 1]; the top bucket has no finite upper bound
             let lo_str = format_size(lo, BINARY);

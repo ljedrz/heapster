@@ -61,8 +61,8 @@ impl Sub<Histogram> for &Histogram {
 
 impl Histogram {
     /// Returns the raw underlying buckets.
-    pub fn buckets(&self) -> [usize; 64] {
-        self.buckets
+    pub fn buckets(&self) -> &[usize; 64] {
+        &self.buckets
     }
 
     /// Approximates the value at quantile `q` (0.0..=1.0) from a power-of-two histogram.
