@@ -1,6 +1,6 @@
 use std::{alloc::GlobalAlloc, ops::Sub};
 
-use crate::Heapster;
+use crate::{Heapster, Histogram};
 
 /// A summary of an allocator's stats.
 #[derive(Debug, Clone)]
@@ -12,7 +12,7 @@ pub struct Stats {
     /// The average size of allocations.
     pub alloc_avg: Option<usize>,
     /// The allocation size buckets.
-    pub alloc_buckets: [usize; 64],
+    pub alloc_buckets: Histogram,
     /// The total number of failed allocations.
     pub alloc_fail_count: usize,
     /// The total number of deallocations.
@@ -28,7 +28,7 @@ pub struct Stats {
     /// The average size of reallocations caused by object growth.
     pub realloc_growth_avg: Option<usize>,
     /// The growth reallocation size buckets.
-    pub realloc_growth_buckets: [usize; 64],
+    pub realloc_growth_buckets: Histogram,
     /// The total number of reallocations caused by object shrinkage.
     pub realloc_shrink_count: usize,
     /// The sum of all shrink reallocations.
@@ -36,7 +36,7 @@ pub struct Stats {
     /// The average size of reallocations caused by object shrinkage.
     pub realloc_shrink_avg: Option<usize>,
     /// The shrink reallocation size buckets.
-    pub realloc_shrink_buckets: [usize; 64],
+    pub realloc_shrink_buckets: Histogram,
     /// The total number of full reallocations.
     pub realloc_move_count: usize,
     /// The sum of all full allocations.
@@ -57,7 +57,7 @@ impl<A: GlobalAlloc> Heapster<A> {
         let alloc_count = self.alloc_count();
         let alloc_sum = self.alloc_sum();
         let alloc_avg = alloc_sum.checked_div(alloc_count);
-        let alloc_buckets = self.alloc_buckets();
+        let alloc_buckets = self.alloc_histogram();
         let alloc_fail_count = self.alloc_fail_count();
 
         let dealloc_count = self.dealloc_count();
@@ -67,12 +67,12 @@ impl<A: GlobalAlloc> Heapster<A> {
         let realloc_growth_count = self.realloc_growth_count();
         let realloc_growth_sum = self.realloc_growth_sum();
         let realloc_growth_avg = realloc_growth_sum.checked_div(realloc_growth_count);
-        let realloc_growth_buckets = self.realloc_growth_buckets();
+        let realloc_growth_buckets = self.realloc_growth_histogram();
 
         let realloc_shrink_count = self.realloc_shrink_count();
         let realloc_shrink_sum = self.realloc_shrink_sum();
         let realloc_shrink_avg = realloc_shrink_sum.checked_div(realloc_shrink_count);
-        let realloc_shrink_buckets = self.realloc_shrink_buckets();
+        let realloc_shrink_buckets = self.realloc_shrink_histogram();
 
         let realloc_move_count = self.realloc_move_count();
         let realloc_move_sum = self.realloc_move_sum();
@@ -109,14 +109,6 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 }
 
-fn diff_buckets(base: [usize; 64], old: [usize; 64]) -> [usize; 64] {
-    let mut out = [0usize; 64];
-    for (i, (b_base, b_old)) in base.iter().zip(&old).enumerate() {
-        out[i] = b_base - b_old;
-    }
-    out
-}
-
 impl Sub<&Stats> for &Stats {
     type Output = Stats;
 
@@ -124,7 +116,7 @@ impl Sub<&Stats> for &Stats {
         let alloc_count = self.alloc_count - old.alloc_count;
         let alloc_sum = self.alloc_sum - old.alloc_sum;
         let alloc_avg = alloc_sum.checked_div(alloc_count);
-        let alloc_buckets = diff_buckets(self.alloc_buckets, old.alloc_buckets);
+        let alloc_buckets = &self.alloc_buckets - &old.alloc_buckets;
         let alloc_fail_count = self.alloc_fail_count - old.alloc_fail_count;
 
         let dealloc_count = self.dealloc_count - old.dealloc_count;
@@ -134,14 +126,12 @@ impl Sub<&Stats> for &Stats {
         let realloc_growth_count = self.realloc_growth_count - old.realloc_growth_count;
         let realloc_growth_sum = self.realloc_growth_sum - old.realloc_growth_sum;
         let realloc_growth_avg = realloc_growth_sum.checked_div(realloc_growth_count);
-        let realloc_growth_buckets =
-            diff_buckets(self.realloc_growth_buckets, old.realloc_growth_buckets);
+        let realloc_growth_buckets = &self.realloc_growth_buckets - &old.realloc_growth_buckets;
 
         let realloc_shrink_count = self.realloc_shrink_count - old.realloc_shrink_count;
         let realloc_shrink_sum = self.realloc_shrink_sum - old.realloc_shrink_sum;
         let realloc_shrink_avg = realloc_shrink_sum.checked_div(realloc_shrink_count);
-        let realloc_shrink_buckets =
-            diff_buckets(self.realloc_shrink_buckets, old.realloc_shrink_buckets);
+        let realloc_shrink_buckets = &self.realloc_shrink_buckets - &old.realloc_shrink_buckets;
 
         let realloc_move_count = self.realloc_move_count - old.realloc_move_count;
         let realloc_move_sum = self.realloc_move_sum - old.realloc_move_sum;

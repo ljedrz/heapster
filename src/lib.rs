@@ -1,6 +1,9 @@
 #[cfg(feature = "fmt")]
 mod fmt;
+mod histogram;
 mod stats;
+
+pub use histogram::Histogram;
 pub use stats::Stats;
 
 use std::{
@@ -36,12 +39,12 @@ static USE_MAX: AtomicUsize = AtomicUsize::new(0);
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Heapster<A: GlobalAlloc>(A);
 
-fn bucket_snapshot(buckets: &[AtomicUsize; 64]) -> [usize; 64] {
+fn bucket_snapshot(buckets: &[AtomicUsize; 64]) -> Histogram {
     let mut out = [0usize; 64];
     for (i, b) in buckets.iter().enumerate() {
         out[i] = b.load(Ordering::Relaxed);
     }
-    out
+    Histogram { buckets: out }
 }
 
 impl<A: GlobalAlloc> Heapster<A> {
@@ -60,9 +63,9 @@ impl<A: GlobalAlloc> Heapster<A> {
         ALLOC_SUM.load(Ordering::Relaxed)
     }
 
-    /// Returns buckets containing the numbers of allocations of
-    /// different sizes, starting with 2^0 and ending with 2^63.
-    pub fn alloc_buckets(&self) -> [usize; 64] {
+    /// Returns a histogram representing the number
+    /// of allocations of different sizes.
+    pub fn alloc_histogram(&self) -> Histogram {
         bucket_snapshot(&ALLOC_BUCKETS)
     }
 
@@ -91,9 +94,9 @@ impl<A: GlobalAlloc> Heapster<A> {
         REALLOC_GROWTH_SUM.load(Ordering::Relaxed)
     }
 
-    /// Returns buckets containing the numbers of growth reallocations
-    /// of different sizes, starting with 2^0 and ending with 2^63.
-    pub fn realloc_growth_buckets(&self) -> [usize; 64] {
+    /// Returns a histogram representing the number
+    /// of growth reallocations of different sizes.
+    pub fn realloc_growth_histogram(&self) -> Histogram {
         bucket_snapshot(&REALLOC_GROWTH_BUCKETS)
     }
 
@@ -107,9 +110,9 @@ impl<A: GlobalAlloc> Heapster<A> {
         REALLOC_SHRINK_SUM.load(Ordering::Relaxed)
     }
 
-    /// Returns buckets containing the numbers of shrink reallocations
-    /// of different sizes, starting with 2^0 and ending with 2^63.
-    pub fn realloc_shrink_buckets(&self) -> [usize; 64] {
+    /// Returns a histogram representing the number
+    /// of shrink reallocations of different sizes.
+    pub fn realloc_shrink_histogram(&self) -> Histogram {
         bucket_snapshot(&REALLOC_SHRINK_BUCKETS)
     }
 
