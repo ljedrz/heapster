@@ -66,9 +66,28 @@ impl Sub<Histogram> for &Histogram {
 }
 
 impl Histogram {
+    /// Constructs a histogram from raw bucket counts.
+    ///
+    /// Bucket `k` represents the count of values in the range `[2^k, 2^(k+1))`.
+    /// This is primarily useful for deserializing histogram data from external
+    /// sources or constructing histograms in tests.
+    pub const fn from_buckets(buckets: [usize; 64]) -> Self {
+        Self { buckets }
+    }
+
     /// Returns the raw underlying buckets.
-    pub fn buckets(&self) -> &[usize; 64] {
+    pub const fn buckets(&self) -> &[usize; 64] {
         &self.buckets
+    }
+
+    /// Returns the total number of entries across all buckets.
+    pub fn total(&self) -> usize {
+        self.buckets.iter().sum()
+    }
+
+    /// Returns `true` if there are no allocations in the histogram.
+    pub fn is_empty(&self) -> bool {
+        self.buckets.iter().all(|b| *b == 0)
     }
 
     /// Approximates the value at quantile `q` (0.0..=1.0) from a power-of-two histogram.

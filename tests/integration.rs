@@ -184,4 +184,3 @@ fn random_allocs() {
     assert_eq!(GLOBAL.realloc_move_sum(), 0);
     assert_eq!(GLOBAL.realloc_move_avg(), None);
 }
-
