@@ -19,6 +19,7 @@ all-features = true
 [features]
 fmt = ["dep:humansize", "dep:num-format"]
 serde = ["dep:serde"]
+test = []
 
 [dependencies]
 humansize = { version = "2", optional = true }
@@ -27,3 +28,5 @@ serde = { version = "1.0.228", features = ["derive"], optional = true }
 
 [dev-dependencies]
 rand = "0.10.1"
+heapster = { path = ".", features = ["test"] }
+serde_json = "1.0.149"
