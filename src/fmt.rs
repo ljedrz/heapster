@@ -131,7 +131,7 @@ impl fmt::Display for Stats {
 
 impl fmt::Display for Histogram {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        const BAR_WIDTH: usize = 40;
+        const BAR_WIDTH: u128 = 40;
 
         let Some(first) = self.buckets().iter().position(|&c| c > 0) else {
             writeln!(f, "(empty)")?;
@@ -159,7 +159,10 @@ impl fmt::Display for Histogram {
             let bar_len = if count == 0 {
                 0
             } else {
-                cmp::max(1, count.saturating_mul(BAR_WIDTH) / max)
+                cmp::max(
+                    1,
+                    ((count as u128).saturating_mul(BAR_WIDTH) / max as u128) as usize,
+                )
             };
             for _ in 0..bar_len {
                 f.write_str("█")?;
