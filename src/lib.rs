@@ -289,4 +289,20 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
 
         new_ptr
     }
+
+    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
+        let ret = unsafe { self.0.alloc_zeroed(layout) };
+        if !ret.is_null() {
+            let size = layout.size();
+            ALLOC_SUM.fetch_add(size as u64, Ordering::Relaxed);
+            ALLOC_COUNT.fetch_add(1, Ordering::Relaxed);
+            let curr = USE_CURR.fetch_add(size, Ordering::Relaxed) + size;
+            USE_MAX.fetch_max(curr, Ordering::Relaxed);
+            ALLOC_BUCKETS[bucket_of(size)].fetch_add(1, Ordering::Relaxed);
+        } else {
+            ALLOC_FAIL_COUNT.fetch_add(1, Ordering::Relaxed);
+        }
+
+        ret
+    }
 }
