@@ -1,6 +1,6 @@
 [package]
 name = "heapster"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["ljedrz <ljedrz@gmail.com>"]
 edition = "2024"
 description = "A lightweight wrapper enhancing the global allocator with useful metrics."
