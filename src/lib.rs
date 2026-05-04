@@ -53,6 +53,11 @@ impl<A: GlobalAlloc> Heapster<A> {
         Self(alloc)
     }
 
+    /// Returns a reference to the underlying allocator.
+    pub const fn inner(&self) -> &A {
+        &self.0
+    }
+
     /// Returns the total number of allocations.
     pub fn alloc_count(&self) -> usize {
         ALLOC_COUNT.load(Ordering::Relaxed)
