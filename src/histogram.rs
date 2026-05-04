@@ -13,10 +13,7 @@ use serde::{
 /// [2^63, 2^64) bucket.
 #[derive(Debug, Clone, Copy)]
 pub struct Histogram {
-    #[cfg(not(feature = "test"))]
     pub(crate) buckets: [usize; 64],
-    #[cfg(feature = "test")]
-    pub buckets: [usize; 64],
 }
 
 impl Default for Histogram {

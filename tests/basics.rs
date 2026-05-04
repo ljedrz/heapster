@@ -61,7 +61,7 @@ fn histogram_quantile() {
     // out-of-range q returns None
     let mut buckets = [0usize; 64];
     buckets[5] = 10; // bucket 5 = [32, 64)
-    let h = Histogram { buckets };
+    let h = Histogram::from_buckets(buckets);
     assert_eq!(h.quantile(-0.1), None);
     assert_eq!(h.quantile(1.1), None);
 
@@ -100,7 +100,7 @@ fn serde_roundtrip() {
     let mut buckets = [0usize; 64];
     buckets[3] = 7;
     buckets[63] = 1; // exercise the top bucket
-    let h = Histogram { buckets };
+    let h = Histogram::from_buckets(buckets);
 
     let json = serde_json::to_string(&h).unwrap();
     let h2: Histogram = serde_json::from_str(&json).unwrap();
