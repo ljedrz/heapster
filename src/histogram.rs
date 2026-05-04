@@ -50,6 +50,7 @@ impl Sub<Histogram> for Histogram {
 impl Sub<&Histogram> for Histogram {
     type Output = Histogram;
 
+    #[allow(clippy::op_ref)]
     fn sub(self, old: &Histogram) -> Histogram {
         &self - old
     }
@@ -58,6 +59,7 @@ impl Sub<&Histogram> for Histogram {
 impl Sub<Histogram> for &Histogram {
     type Output = Histogram;
 
+    #[allow(clippy::op_ref)]
     fn sub(self, old: Histogram) -> Histogram {
         self - &old
     }
