@@ -11,9 +11,6 @@ jobs:
     name: cargo test
     runs-on: ubuntu-latest
     steps:
-      - uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo test --all-features -- --test-threads=1
