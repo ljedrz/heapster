@@ -9,27 +9,27 @@ pub use stats::Stats;
 use std::{
     alloc::{GlobalAlloc, Layout},
     cmp,
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::atomic::{AtomicU64, AtomicUsize, Ordering},
 };
 
 static ALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
-static ALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
+static ALLOC_SUM: AtomicU64 = AtomicU64::new(0);
 static ALLOC_BUCKETS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
 static ALLOC_FAIL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 static DEALLOC_COUNT: AtomicUsize = AtomicUsize::new(0);
-static DEALLOC_SUM: AtomicUsize = AtomicUsize::new(0);
+static DEALLOC_SUM: AtomicU64 = AtomicU64::new(0);
 
 static REALLOC_GROWTH_COUNT: AtomicUsize = AtomicUsize::new(0);
-static REALLOC_GROWTH_SUM: AtomicUsize = AtomicUsize::new(0);
+static REALLOC_GROWTH_SUM: AtomicU64 = AtomicU64::new(0);
 static REALLOC_GROWTH_BUCKETS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
 
 static REALLOC_SHRINK_COUNT: AtomicUsize = AtomicUsize::new(0);
-static REALLOC_SHRINK_SUM: AtomicUsize = AtomicUsize::new(0);
+static REALLOC_SHRINK_SUM: AtomicU64 = AtomicU64::new(0);
 static REALLOC_SHRINK_BUCKETS: [AtomicUsize; 64] = [const { AtomicUsize::new(0) }; 64];
 
 static REALLOC_MOVE_COUNT: AtomicUsize = AtomicUsize::new(0);
-static REALLOC_MOVE_SUM: AtomicUsize = AtomicUsize::new(0);
+static REALLOC_MOVE_SUM: AtomicU64 = AtomicU64::new(0);
 static REALLOC_FAIL_COUNT: AtomicUsize = AtomicUsize::new(0);
 
 static USE_CURR: AtomicUsize = AtomicUsize::new(0);
@@ -59,7 +59,7 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 
     /// Returns the sum of all allocations.
-    pub fn alloc_sum(&self) -> usize {
+    pub fn alloc_sum(&self) -> u64 {
         ALLOC_SUM.load(Ordering::Relaxed)
     }
 
@@ -80,7 +80,7 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 
     /// Returns the sum of all deallocations.
-    pub fn dealloc_sum(&self) -> usize {
+    pub fn dealloc_sum(&self) -> u64 {
         DEALLOC_SUM.load(Ordering::Relaxed)
     }
 
@@ -90,7 +90,7 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 
     /// Returns the sum of all reallocations caused by object growth.
-    pub fn realloc_growth_sum(&self) -> usize {
+    pub fn realloc_growth_sum(&self) -> u64 {
         REALLOC_GROWTH_SUM.load(Ordering::Relaxed)
     }
 
@@ -106,7 +106,7 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 
     /// Returns the sum of all reallocations caused by object shrinkage.
-    pub fn realloc_shrink_sum(&self) -> usize {
+    pub fn realloc_shrink_sum(&self) -> u64 {
         REALLOC_SHRINK_SUM.load(Ordering::Relaxed)
     }
 
@@ -122,7 +122,7 @@ impl<A: GlobalAlloc> Heapster<A> {
     }
 
     /// Returns the sum of all full reallocations.
-    pub fn realloc_move_sum(&self) -> usize {
+    pub fn realloc_move_sum(&self) -> u64 {
         REALLOC_MOVE_SUM.load(Ordering::Relaxed)
     }
 
@@ -135,35 +135,35 @@ impl<A: GlobalAlloc> Heapster<A> {
     pub fn alloc_avg(&self) -> Option<usize> {
         let sum = ALLOC_SUM.load(Ordering::Relaxed);
         let count = ALLOC_COUNT.load(Ordering::Relaxed);
-        sum.checked_div(count)
+        sum.checked_div(count as u64).map(|avg| avg as usize)
     }
 
     /// Returns the average size of deallocations.
     pub fn dealloc_avg(&self) -> Option<usize> {
         let sum = DEALLOC_SUM.load(Ordering::Relaxed);
         let count = DEALLOC_COUNT.load(Ordering::Relaxed);
-        sum.checked_div(count)
+        sum.checked_div(count as u64).map(|avg| avg as usize)
     }
 
     /// Returns the average size of reallocations caused by object growth.
     pub fn realloc_growth_avg(&self) -> Option<usize> {
         let sum = REALLOC_GROWTH_SUM.load(Ordering::Relaxed);
         let count = REALLOC_GROWTH_COUNT.load(Ordering::Relaxed);
-        sum.checked_div(count)
+        sum.checked_div(count as u64).map(|avg| avg as usize)
     }
 
     /// Returns the average size of reallocations caused by object shrinkage.
     pub fn realloc_shrink_avg(&self) -> Option<usize> {
         let sum = REALLOC_SHRINK_SUM.load(Ordering::Relaxed);
         let count = REALLOC_SHRINK_COUNT.load(Ordering::Relaxed);
-        sum.checked_div(count)
+        sum.checked_div(count as u64).map(|avg| avg as usize)
     }
 
     /// Returns the average size of full reallocations.
     pub fn realloc_move_avg(&self) -> Option<usize> {
         let sum = REALLOC_MOVE_SUM.load(Ordering::Relaxed);
         let count = REALLOC_MOVE_COUNT.load(Ordering::Relaxed);
-        sum.checked_div(count)
+        sum.checked_div(count as u64).map(|avg| avg as usize)
     }
 
     /// Returns current heap use.
@@ -236,7 +236,7 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
         let ret = unsafe { self.0.alloc(layout) };
         if !ret.is_null() {
             let size = layout.size();
-            ALLOC_SUM.fetch_add(size, Ordering::Relaxed);
+            ALLOC_SUM.fetch_add(size as u64, Ordering::Relaxed);
             ALLOC_COUNT.fetch_add(1, Ordering::Relaxed);
             let curr = USE_CURR.fetch_add(size, Ordering::Relaxed) + size;
             USE_MAX.fetch_max(curr, Ordering::Relaxed);
@@ -252,7 +252,7 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
         unsafe { self.0.dealloc(ptr, layout) };
         let size = layout.size();
         USE_CURR.fetch_sub(size, Ordering::Relaxed);
-        DEALLOC_SUM.fetch_add(size, Ordering::Relaxed);
+        DEALLOC_SUM.fetch_add(size as u64, Ordering::Relaxed);
         DEALLOC_COUNT.fetch_add(1, Ordering::Relaxed);
     }
 
@@ -262,20 +262,21 @@ unsafe impl<A: GlobalAlloc> GlobalAlloc for Heapster<A> {
             if new_size >= layout.size() {
                 let diff = new_size - layout.size();
                 REALLOC_GROWTH_COUNT.fetch_add(1, Ordering::Relaxed);
-                REALLOC_GROWTH_SUM.fetch_add(diff, Ordering::Relaxed);
+                REALLOC_GROWTH_SUM.fetch_add(diff as u64, Ordering::Relaxed);
                 let curr = USE_CURR.fetch_add(diff, Ordering::Relaxed) + diff;
                 USE_MAX.fetch_max(curr, Ordering::Relaxed);
                 REALLOC_GROWTH_BUCKETS[bucket_of(diff)].fetch_add(1, Ordering::Relaxed);
             } else {
                 let diff = layout.size() - new_size;
                 REALLOC_SHRINK_COUNT.fetch_add(1, Ordering::Relaxed);
-                REALLOC_SHRINK_SUM.fetch_add(diff, Ordering::Relaxed);
+                REALLOC_SHRINK_SUM.fetch_add(diff as u64, Ordering::Relaxed);
                 USE_CURR.fetch_sub(diff, Ordering::Relaxed);
                 REALLOC_SHRINK_BUCKETS[bucket_of(diff)].fetch_add(1, Ordering::Relaxed);
             }
             if new_ptr != ptr {
                 REALLOC_MOVE_COUNT.fetch_add(1, Ordering::Relaxed);
-                REALLOC_MOVE_SUM.fetch_add(cmp::min(layout.size(), new_size), Ordering::Relaxed);
+                REALLOC_MOVE_SUM
+                    .fetch_add(cmp::min(layout.size(), new_size) as u64, Ordering::Relaxed);
             }
         } else {
             REALLOC_FAIL_COUNT.fetch_add(1, Ordering::Relaxed);

@@ -15,13 +15,13 @@ fn random_allocs() {
 
     // Prepare counters holding expected values.
     let mut num_allocs = 0;
-    let mut sum_allocs = 0;
+    let mut sum_allocs = 0u64;
     let mut num_deallocs = 0;
-    let mut sum_deallocs = 0;
+    let mut sum_deallocs = 0u64;
     let mut num_realloc_growth = 0;
-    let mut sum_realloc_growth = 0;
+    let mut sum_realloc_growth = 0u64;
     let mut num_realloc_shrink = 0;
-    let mut sum_realloc_shrink = 0;
+    let mut sum_realloc_shrink = 0u64;
     let mut curr_use;
     let mut max_alloc = 0;
 
@@ -47,25 +47,37 @@ fn random_allocs() {
 
         // Update the manual counters.
         num_allocs += 1;
-        sum_allocs += alloc_size;
+        sum_allocs += alloc_size as u64;
         curr_use += alloc_size;
 
         // Check the allocation stats.
         assert_eq!(GLOBAL.alloc_count(), num_allocs);
         assert_eq!(GLOBAL.alloc_sum(), sum_allocs);
-        assert_eq!(GLOBAL.alloc_avg(), sum_allocs.checked_div(num_allocs));
+        assert_eq!(
+            GLOBAL.alloc_avg(),
+            sum_allocs
+                .checked_div(num_allocs as u64)
+                .map(|avg| avg as usize)
+        );
 
         // Check the allocation stats.
         assert_eq!(GLOBAL.dealloc_count(), num_deallocs);
         assert_eq!(GLOBAL.dealloc_sum(), sum_deallocs);
-        assert_eq!(GLOBAL.dealloc_avg(), sum_deallocs.checked_div(num_deallocs));
+        assert_eq!(
+            GLOBAL.dealloc_avg(),
+            sum_deallocs
+                .checked_div(num_deallocs as u64)
+                .map(|avg| avg as usize)
+        );
 
         // Check the growth reallocation stats.
         assert_eq!(GLOBAL.realloc_growth_count(), num_realloc_growth);
         assert_eq!(GLOBAL.realloc_growth_sum(), sum_realloc_growth);
         assert_eq!(
             GLOBAL.realloc_growth_avg(),
-            sum_realloc_growth.checked_div(num_realloc_growth)
+            sum_realloc_growth
+                .checked_div(num_realloc_growth as u64)
+                .map(|avg| avg as usize)
         );
 
         // Check the shrink reallocation stats.
@@ -73,7 +85,9 @@ fn random_allocs() {
         assert_eq!(GLOBAL.realloc_shrink_sum(), sum_realloc_shrink);
         assert_eq!(
             GLOBAL.realloc_shrink_avg(),
-            sum_realloc_shrink.checked_div(num_realloc_shrink)
+            sum_realloc_shrink
+                .checked_div(num_realloc_shrink as u64)
+                .map(|avg| avg as usize)
         );
 
         // The move count isn't deterministic.
@@ -104,7 +118,7 @@ fn random_allocs() {
 
                 // Update the counters after the reallocation.
                 num_realloc_growth += 1;
-                sum_realloc_growth += realloc_size;
+                sum_realloc_growth += realloc_size as u64;
 
                 curr_use += realloc_size;
                 assert_eq!(GLOBAL.use_curr(), curr_use);
@@ -112,7 +126,7 @@ fn random_allocs() {
                 // Update the counters related to the end of the scope.
                 // note: these values are offset by those at the end of
                 // the iteration.
-                sum_deallocs += realloc_size;
+                sum_deallocs += realloc_size as u64;
                 curr_use -= realloc_size;
             }
             2 => {
@@ -122,7 +136,7 @@ fn random_allocs() {
 
                 // Update the counters after the reallocation.
                 num_realloc_shrink += 1;
-                sum_realloc_shrink += realloc_size;
+                sum_realloc_shrink += realloc_size as u64;
 
                 curr_use -= realloc_size;
                 assert_eq!(GLOBAL.use_curr(), curr_use);
@@ -130,7 +144,7 @@ fn random_allocs() {
                 // Update the counters related to the end of the scope.
                 // note: these values are offset by those at the end of
                 // the iteration.
-                sum_deallocs -= realloc_size;
+                sum_deallocs -= realloc_size as u64;
                 curr_use += realloc_size;
             }
             3 => {
@@ -145,14 +159,14 @@ fn random_allocs() {
 
                 // Update the relevant manual counters.
                 num_allocs += 1;
-                sum_allocs += alloc2_size;
+                sum_allocs += alloc2_size as u64;
 
                 curr_use += alloc2_size;
                 assert_eq!(GLOBAL.use_curr(), curr_use);
 
                 // Update the counters related to the end of the scope.
                 num_deallocs += 1;
-                sum_deallocs += alloc2_size;
+                sum_deallocs += alloc2_size as u64;
                 curr_use -= alloc2_size;
             }
             _ => unreachable!(),
@@ -160,7 +174,7 @@ fn random_allocs() {
 
         // The original `alloc` gets dropped here.
         num_deallocs += 1;
-        sum_deallocs += alloc_size;
+        sum_deallocs += alloc_size as u64;
         curr_use -= alloc_size;
     }
 
