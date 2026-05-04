@@ -26,7 +26,7 @@ Add `heapster` to your `Cargo.toml`. Enable the `fmt` feature if you want pretty
 
 ```TOML
 [dependencies]
-heapster = { version = "0.3", features = ["fmt"] }
+heapster = { version = "0.4", features = ["fmt"] }
 ```
 
 Wrap your global allocator of choice (e.g., `System`) in your `main.rs` or `lib.rs`:
@@ -78,8 +78,6 @@ dealloc_avg: 4.09 KiB
 realloc_growth_count: 365,968
 realloc_growth_avg: 49.12 KiB
 
-realloc_shrink_count: 0
-
 realloc_move_count: 351,933
 realloc_move_avg: 7.21 KiB
 
@@ -120,6 +118,4 @@ realloc_growth_histogram:
 [    8 KiB ..    16 KiB):            0  
 [   16 KiB ..    32 KiB):            0  
 [   32 KiB ..    64 KiB):      320,982  ████████████████████████████████████████
-
-realloc_shrink_histogram: (empty)
 ```
