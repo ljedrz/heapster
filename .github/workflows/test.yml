@@ -16,4 +16,4 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --release
+      - run: cargo test --all-features -- --test-threads=1
