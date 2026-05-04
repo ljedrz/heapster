@@ -16,6 +16,7 @@ impl fmt::Display for Stats {
         if let Some(alloc_avg) = self.alloc_avg {
             writeln!(f, "alloc_avg: {}", format_size(alloc_avg, BINARY))?;
         }
+
         writeln!(
             f,
             "\ndealloc_count: {}",
@@ -25,71 +26,104 @@ impl fmt::Display for Stats {
         if let Some(dealloc_avg) = self.dealloc_avg {
             writeln!(f, "dealloc_avg: {}", format_size(dealloc_avg, BINARY))?;
         }
-        writeln!(
-            f,
-            "\nrealloc_growth_count: {}",
-            self.realloc_growth_count.to_formatted_string(&Locale::en)
-        )?;
-        writeln!(
-            f,
-            "realloc_growth_sum: {}",
-            format_size(self.realloc_growth_sum, BINARY)
-        )?;
-        if let Some(realloc_growth_avg) = self.realloc_growth_avg {
+
+        if self.realloc_growth_count > 0 {
             writeln!(
                 f,
-                "realloc_growth_avg: {}",
-                format_size(realloc_growth_avg, BINARY)
+                "\nrealloc_growth_count: {}",
+                self.realloc_growth_count.to_formatted_string(&Locale::en)
             )?;
-        }
-        writeln!(
-            f,
-            "\nrealloc_shrink_count: {}",
-            self.realloc_shrink_count.to_formatted_string(&Locale::en)
-        )?;
-        writeln!(
-            f,
-            "realloc_shrink_sum: {}",
-            format_size(self.realloc_shrink_sum, BINARY)
-        )?;
-        if let Some(realloc_shrink_avg) = self.realloc_shrink_avg {
             writeln!(
                 f,
-                "realloc_shrink_avg: {}",
-                format_size(realloc_shrink_avg, BINARY)
+                "realloc_growth_sum: {}",
+                format_size(self.realloc_growth_sum, BINARY)
             )?;
+            if let Some(realloc_growth_avg) = self.realloc_growth_avg {
+                writeln!(
+                    f,
+                    "realloc_growth_avg: {}",
+                    format_size(realloc_growth_avg, BINARY)
+                )?;
+            }
         }
-        writeln!(
-            f,
-            "\nrealloc_move_count: {}",
-            self.realloc_move_count.to_formatted_string(&Locale::en)
-        )?;
-        writeln!(
-            f,
-            "realloc_move_sum: {}",
-            format_size(self.realloc_move_sum, BINARY)
-        )?;
-        if let Some(realloc_move_avg) = self.realloc_move_avg {
+
+        if self.realloc_shrink_count > 0 {
             writeln!(
                 f,
-                "realloc_move_avg: {}",
-                format_size(realloc_move_avg, BINARY)
+                "\nrealloc_shrink_count: {}",
+                self.realloc_shrink_count.to_formatted_string(&Locale::en)
+            )?;
+            writeln!(
+                f,
+                "realloc_shrink_sum: {}",
+                format_size(self.realloc_shrink_sum, BINARY)
+            )?;
+            if let Some(realloc_shrink_avg) = self.realloc_shrink_avg {
+                writeln!(
+                    f,
+                    "realloc_shrink_avg: {}",
+                    format_size(realloc_shrink_avg, BINARY)
+                )?;
+            }
+        }
+
+        if self.realloc_move_count > 0 {
+            writeln!(
+                f,
+                "\nrealloc_move_count: {}",
+                self.realloc_move_count.to_formatted_string(&Locale::en)
+            )?;
+            writeln!(
+                f,
+                "realloc_move_sum: {}",
+                format_size(self.realloc_move_sum, BINARY)
+            )?;
+            if let Some(realloc_move_avg) = self.realloc_move_avg {
+                writeln!(
+                    f,
+                    "realloc_move_avg: {}",
+                    format_size(realloc_move_avg, BINARY)
+                )?;
+            }
+        }
+
+        if self.alloc_fail_count > 0 {
+            writeln!(
+                f,
+                "\nalloc_fail_count: {}",
+                self.alloc_fail_count.to_formatted_string(&Locale::en)
             )?;
         }
+        if self.realloc_fail_count > 0 {
+            writeln!(
+                f,
+                "realloc_fail_count: {}",
+                self.realloc_fail_count.to_formatted_string(&Locale::en)
+            )?;
+        }
+
         writeln!(f, "\nuse_curr: {}", format_size(self.use_curr, BINARY))?;
         writeln!(f, "use_max: {}", format_size(self.use_max, BINARY))?;
 
-        writeln!(f, "\nalloc_histogram:\n{}", &self.alloc_histogram)?;
-        writeln!(
-            f,
-            "realloc_growth_histogram:\n{}",
-            &self.realloc_growth_histogram
-        )?;
-        writeln!(
-            f,
-            "realloc_shrink_histogram:\n{}",
-            &self.realloc_shrink_histogram
-        )?;
+        if self.alloc_histogram.total() > 0 {
+            writeln!(f, "\nalloc_histogram:\n{}", &self.alloc_histogram)?;
+        }
+
+        if self.realloc_growth_histogram.total() > 0 {
+            writeln!(
+                f,
+                "realloc_growth_histogram:\n{}",
+                &self.realloc_growth_histogram
+            )?;
+        }
+
+        if self.realloc_shrink_histogram.total() > 0 {
+            writeln!(
+                f,
+                "realloc_shrink_histogram:\n{}",
+                &self.realloc_shrink_histogram
+            )?;
+        }
 
         Ok(())
     }

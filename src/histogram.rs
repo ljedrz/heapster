@@ -104,7 +104,7 @@ impl Histogram {
         if !(0.0..=1.0).contains(&q) {
             return None;
         }
-        let total: usize = self.buckets.iter().sum();
+        let total = self.total();
         if total == 0 {
             return None;
         }
