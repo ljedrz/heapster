@@ -1,4 +1,5 @@
-use std::{cmp, fmt};
+use alloc::format;
+use core::{cmp, fmt};
 
 use humansize::{BINARY, format_size};
 use num_format::{Locale, ToFormattedString};

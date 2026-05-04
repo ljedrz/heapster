@@ -1,4 +1,4 @@
-use std::{alloc::GlobalAlloc, ops::Sub};
+use core::{alloc::GlobalAlloc, ops::Sub};
 
 use crate::{Heapster, Histogram};
 

@@ -1,3 +1,5 @@
+#![no_std]
+
 #[cfg(feature = "fmt")]
 mod fmt;
 mod histogram;
@@ -6,7 +8,10 @@ mod stats;
 pub use histogram::Histogram;
 pub use stats::Stats;
 
-use std::{
+#[cfg(feature = "fmt")]
+extern crate alloc;
+
+use core::{
     alloc::{GlobalAlloc, Layout},
     cmp,
     sync::atomic::{AtomicU64, AtomicUsize, Ordering},

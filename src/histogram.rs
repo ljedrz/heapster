@@ -1,6 +1,6 @@
 #[cfg(feature = "serde")]
-use std::fmt;
-use std::ops::Sub;
+use core::fmt;
+use core::ops::Sub;
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -106,10 +106,16 @@ impl Histogram {
             return None;
         }
 
-        // Target rank in [1, total]. Using ceil avoids returning bucket k-1 when
-        // q lands exactly on a bucket boundary.
-        let target = ((total as f64) * q).ceil().max(1.0) as usize;
-        let target = target.min(total);
+        // Target rank in [1, total]. Using a handwritten (to avoid std) ceil
+        // avoids returning bucket k-1 when q lands exactly on a bucket boundary.
+        let float_target = (total as f64) * q;
+        let mut target = float_target as usize;
+        // If the float has a fractional part, truncation rounded it down.
+        // Add 1 to effectively compute the ceiling.
+        if (target as f64) < float_target {
+            target += 1;
+        }
+        let target = target.max(1).min(total);
 
         let mut cumulative = 0usize;
         for (k, &count) in self.buckets.iter().enumerate() {

@@ -10,7 +10,7 @@ homepage = "https://github.com/ljedrz/heapster"
 documentation = "https://docs.rs/heapster"
 readme = "README.md"
 categories  = ["memory-management"]
-keywords = ["allocator", "heap", "memory"]
+keywords = ["heap", "memory", "no_std"]
 rust-version = "1.85"
 
 [package.metadata.docs.rs]
