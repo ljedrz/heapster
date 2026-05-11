@@ -141,22 +141,30 @@ impl fmt::Display for Histogram {
         let last = self.buckets().iter().rposition(|&c| c > 0).unwrap();
         let max = *self.buckets()[first..=last].iter().max().unwrap();
 
+        // widths scale with content: the count column tracks the largest
+        // formatted count in the displayed range; the size column is the
+        // tightest fixed width that fits every power-of-two label.
+        let size_width = 7usize;
+        let count_width = max.to_formatted_string(&Locale::en).len();
+
         for (k, &count) in (first..=last).zip(self.buckets()[first..=last].iter()) {
             let lo = 1usize << k;
-            // bucket k covers [2^k, 2^(k+1) - 1]; the top bucket has no finite upper bound
             let lo_str = format_size(lo, BINARY);
-            let range_str = match lo.checked_shl(1) {
-                Some(hi) => format!("[{:>9} .. {:>9})", lo_str, format_size(hi, BINARY)),
-                None => format!("[{:>9} ..       inf)", lo_str),
+            // bucket k covers [2^k, 2^(k+1) - 1]; the top bucket has no finite upper bound
+            let range_str = match lo.checked_mul(2) {
+                Some(hi) => format!(
+                    "[{:>size_width$} .. {:>size_width$})",
+                    lo_str,
+                    format_size(hi, BINARY),
+                ),
+                None => format!("[{:>size_width$} .. {:>size_width$})", lo_str, "inf"),
             };
             write!(
                 f,
-                "{}: {:>12}  ",
+                "{}: {:>count_width$}  ",
                 range_str,
                 count.to_formatted_string(&Locale::en),
             )?;
-            // scale bar to max in the trimmed range; show a thin bar for any non-zero
-            // count so tiny buckets don't disappear entirely
             let bar_len = if count == 0 {
                 0
             } else {

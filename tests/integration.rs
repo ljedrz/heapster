@@ -170,7 +170,7 @@ fn random_allocs() {
             }
             _ => {
                 // skip in case of wrong operation order
-            },
+            }
         }
 
         // The original `alloc` gets dropped here.

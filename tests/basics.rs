@@ -106,3 +106,22 @@ fn serde_roundtrip() {
     let h2: Histogram = serde_json::from_str(&json).unwrap();
     assert_eq!(h.buckets(), h2.buckets());
 }
+
+#[test]
+#[cfg(feature = "fmt")]
+fn histogram_fmt() {
+    let max_pow = 10;
+    let mut buckets = [0; 64];
+
+    let mut j = 0;
+    for bucket in &mut buckets {
+        if j > max_pow {
+            j = 0;
+        }
+        *bucket = 2_usize.pow(j);
+        j += 1;
+    }
+    let h = Histogram::from_buckets(buckets);
+
+    println!("{h}");
+}
