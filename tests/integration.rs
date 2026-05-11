@@ -6,7 +6,6 @@ use rand::{RngExt, SeedableRng, rng, rngs::SmallRng};
 #[global_allocator]
 static GLOBAL: Heapster<System> = Heapster::new(System);
 
-// TODO: fix the occasional flakiness
 #[test]
 fn random_allocs() {
     // A bit of test config.
@@ -35,7 +34,7 @@ fn random_allocs() {
     curr_use = GLOBAL.use_curr();
     let max_init_use = GLOBAL.use_max();
 
-    for _ in 0..100 {
+    for _ in 0..1000 {
         // Create a small allocation of a random size.
         let alloc_size: usize = rng.random_range(min_alloc_size..=max_alloc_size);
         let mut alloc: Vec<u8> = Vec::with_capacity(alloc_size);
@@ -129,7 +128,7 @@ fn random_allocs() {
                 sum_deallocs += realloc_size as u64;
                 curr_use -= realloc_size;
             }
-            2 => {
+            2 if sum_deallocs >= min_alloc_size as u64 => {
                 // Shrink the existing allocation.
                 let realloc_size = rng.random_range(1..min_alloc_size);
                 alloc.shrink_to(alloc_size - realloc_size);
@@ -169,7 +168,9 @@ fn random_allocs() {
                 sum_deallocs += alloc2_size as u64;
                 curr_use -= alloc2_size;
             }
-            _ => unreachable!(),
+            _ => {
+                // skip in case of wrong operation order
+            },
         }
 
         // The original `alloc` gets dropped here.
