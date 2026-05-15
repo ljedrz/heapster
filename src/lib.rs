@@ -1,21 +1,23 @@
-//! **artisanal, pure-atomic heap telemetry for rust.**
+//! **Lightweight heap telemetry for Rust, built on relaxed atomics.**
 //!
-//! `heapster` is a stupid-lightweight, generic wrapper over any `GlobalAlloc`
+//! `heapster` is a lightweight, generic wrapper over any `GlobalAlloc`
 //! that tracks allocations, deallocations, and reallocations using pure relaxed atomics.
-//! it is designed to be always-on, allowing you to hunt down pathological memory patterns,
+//! it is designed to be always-on, allowing you to identify allocation patterns,
 //! diff heap usage between code paths, and export raw allocator metrics to your telemetry
 //! dashboards with minimal overhead.
 //!
 //! ## why heapster?
 //!
-//! heavyweight heap profilers are great for deep-dives, but they are often too slow
-//! for production and too complex for simple CI assertions. `heapster` fills the gap:
+//! Heap profilers like dhat or heaptrack capture rich per-allocation data but add significant
+//! overhead and require dedicated viewers. Heapster occupies a lighter tier: aggregate
+//! counters and histograms only, with overhead low enough to leave on in production.
 //!
-//! - **pure atomics**: no mutexes, no thread-locals, no external viewer files. just `AtomicUsize` with `Ordering::Relaxed`.
-//! - **plug-and-play generic**: wrap `System`, `jemalloc`, `mimalloc`, or any custom allocator.
-//! - **pathology hunting**: logarithmic size bucketing (histograms) tells you exactly what sizes are dominating your heap.
-//! - **deep realloc tracking**: distinguishes between reallocations that grew in-place, shrank in-place, or forced a full memory copy.
-//! - **zero-friction diffing**: exposes a [`Heapster::measure`] method to take clean snapshots of memory behavior around hot loops.
+//! - **atomics-only**: no mutexes, no thread-locals, no external viewer files. just relaxed atomic counters.
+//! - **`no_std` by default**: uses only `core` and `alloc` in the default build, with no third-party dependencies. The `fmt` and `serde` features add `std` requirements.
+//! - **generic over any allocator**: wraps `System`, jemalloc, mimalloc, or any custom `GlobalAlloc`.
+//! - **size histograms**: power-of-two buckets for allocations and reallocations make the size distribution visible at a glance.
+//! - **realloc classification**: distinguishes between reallocations that grew in-place, shrank in-place, or forced a full memory copy.
+//! - **snapshot diffing**: `measure()` returns a `Stats` delta for a closure, suitable for assertion-style tests and benchmark comparisons.
 //!
 //! ## quickstart
 //!
@@ -39,8 +41,7 @@
 //!
 //! ## measuring specific operations
 //!
-//! stop guessing if a change increased allocations. `heapster` lets you diff the heap stats
-//! of critical sections of code using snapshot math:
+//! `heapster` lets you diff the heap stats of critical sections of code using snapshot math:
 //!
 //! ```rust
 //! # use heapster::Heapster;

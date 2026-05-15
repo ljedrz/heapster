@@ -1,6 +1,6 @@
 [package]
 name = "heapster"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["ljedrz <ljedrz@gmail.com>"]
 edition = "2024"
 description = "A lightweight wrapper enhancing the global allocator with useful metrics."
@@ -9,8 +9,8 @@ repository = "https://github.com/ljedrz/heapster"
 homepage = "https://github.com/ljedrz/heapster"
 documentation = "https://docs.rs/heapster"
 readme = "README.md"
-categories  = ["memory-management"]
-keywords = ["heap", "memory", "no_std"]
+categories = ["memory-management", "development-tools::profiling"]
+keywords = ["allocator", "heap", "memory", "telemetry", "no_std"]
 rust-version = "1.85"
 
 [package.metadata.docs.rs]
@@ -27,9 +27,9 @@ harness = false
 [dependencies]
 humansize = { version = "2", optional = true }
 num-format = { version = "0.4", optional = true }
-serde = { version = "1.0.228", features = ["derive"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 divan = "0.1"
-rand = "0.10.1"
-serde_json = "1.0.149"
+rand = "0.10"
+serde_json = "1"
